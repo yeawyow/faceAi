@@ -5,4 +5,5 @@ pillow
 aio_pika  # สำหรับเชื่อม RabbitMQ
 onnxruntime
 opencv-python
+aiohttp
 

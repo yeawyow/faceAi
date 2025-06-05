@@ -4,48 +4,74 @@ import asyncio
 import json
 import numpy as np
 from PIL import Image
-import os
+import aiohttp
 
-# โหลดโมเดล InsightFace
-app = FaceAnalysis()
-app.prepare(ctx_id=0, det_size=(640, 640))  # ctx_id=-1 ถ้าไม่มี GPU
+# เตรียม InsightFace
+app = FaceAnalysis(name="buffalo_l")
+app.prepare(ctx_id=0, det_size=(640, 640))
+
+# URL ของ API ที่จะส่งผลลัพธ์ไป
+API_URL = "http://your-api-service/api/face-result"  # เปลี่ยน URL ตรงนี้ตามของคุณ
+
+async def send_to_api(data: dict):
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.post(API_URL, json=data) as response:
+                if response.status == 200:
+                    print("✅ ส่งผลลัพธ์ไป API สำเร็จ")
+                else:
+                    print(f"⚠️ API ตอบกลับ: {response.status}")
+        except Exception as e:
+            print(f"❌ ส่ง API ไม่สำเร็จ: {str(e)}")
 
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
         try:
             payload = json.loads(message.body.decode())
-            image_id = payload.get("imageId")
-            image_path = payload.get("path")
+            image_id = payload["imageId"]
+            image_path = payload["path"]
 
             print(f"📥 รับงาน: imageId={image_id}, path={image_path}")
 
-            # ตรวจสอบว่าภาพมีอยู่จริง
-            if not os.path.exists(image_path):
-                print(f"❌ ไม่พบไฟล์ภาพที่ path: {image_path}")
-                return
-
-            # โหลดและแปลงภาพ
             image = Image.open(image_path).convert("RGB")
-            faces = app.get(np.array(image))
+            image_np = np.array(image)
 
-            print(f"🧠 imageId={image_id} เจอใบหน้าทั้งหมด: {len(faces)}")
+            faces = app.get(image_np)
+            print(f"🧠 พบ {len(faces)} ใบหน้า")
 
-            # >>> ถ้าคุณต้องการส่งผลลัพธ์กลับหรือบันทึก embedding ให้เพิ่มตรงนี้ <<<
+            results = []
+            for face in faces:
+                result = {
+                    "bbox": face.bbox.tolist(),
+                    "embedding": face.embedding.tolist(),
+                    "landmark": face.kps.tolist(),
+                }
+                results.append(result)
+
+            # เตรียมข้อมูลส่ง API
+            output = {
+                "imageId": image_id,
+                "face_count": len(faces),
+                "faces": results
+            }
+
+            # ส่งไปยัง API
+            await send_to_api(output)
 
         except Exception as e:
-            print(f"❌ เกิดข้อผิดพลาด imageId={payload.get('imageId')}: {str(e)}")
+            print(f"❌ เกิดข้อผิดพลาดกับ imageId={payload.get('imageId')}: {str(e)}")
 
 async def main():
     try:
-        connection = await aio_pika.connect_robust(
-            "amqp://skko:skkospiderman@rabbitmq/",
-            heartbeat=60,
-            timeout=60
-        )
+        connection = await aio_pika.connect_robust("amqp://skko:skkospiderman@rabbitmq/")
         channel = await connection.channel()
-        queue = await channel.declare_queue("face_jobs", durable=True)
+        queue = await channel.declare_queue("face_job", durable=True)
+
         await queue.consume(on_message)
-        print("✅ AI Service พร้อมทำงานแล้ว รอรับงาน...")
-        await asyncio.Future()  # รอไม่สิ้นสุด
+        print("✅ AI Service พร้อมทำงานแล้ว...")
+        await asyncio.Future()
     except Exception as e:
         print("❌ เชื่อมต่อ RabbitMQ ไม่สำเร็จ:", str(e))
+
+if __name__ == "__main__":
+    asyncio.run(main())
