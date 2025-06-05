@@ -40,13 +40,11 @@ func SendProcessMq(images []db.ImageProcess) error {
 	if err != nil {
 		return fmt.Errorf("rabbitmq dial failed: %w", err)
 	}
-	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
 		return fmt.Errorf("channel failed: %w", err)
 	}
-	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
 		"face_images_queue",
@@ -75,5 +73,7 @@ func SendProcessMq(images []db.ImageProcess) error {
 	}
 
 	log.Println("✅ ส่ง images ไปยัง RabbitMQ แล้ว")
+	defer ch.Close()
 	return nil
+
 }
