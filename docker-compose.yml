@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: ./backend
-      dockerfile: Dockerfile   # กรณีชื่อไฟล์ Dockerfile ปกติ อันนี้จะระบุหรือไม่ก็ได้
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -18,6 +18,9 @@ services:
       RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
     depends_on:
       - rabbitmq
+    volumes:
+      - /var/www/html/officedd/officedd_photo/images:/app/images
+    restart: unless-stopped
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -27,3 +30,9 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: skko
       RABBITMQ_DEFAULT_PASS: skkospiderman
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
