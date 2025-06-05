@@ -16,6 +16,8 @@ services:
       dockerfile: Dockerfile
     environment:
       RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
+      IMAGES_DIR: /app/images
+
     depends_on:
       - rabbitmq
     volumes:
