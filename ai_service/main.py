@@ -39,7 +39,7 @@ async def main():
     try:
         connection = await aio_pika.connect_robust("amqp://skko:skkospiderman@rabbitmq/")
         channel = await connection.channel()
-        queue = await channel.declare_queue("face_job", durable=True)
+        queue = await channel.declare_queue("face_jobs", durable=True)
         await queue.consume(on_message)
         print("✅ AI Service พร้อมทำงานแล้ว รอรับงาน...")
         await asyncio.Future()  # รอไม่สิ้นสุด
