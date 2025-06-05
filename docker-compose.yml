@@ -21,7 +21,7 @@ services:
     depends_on:
       - rabbitmq
     volumes:
-      - /var/www/html/officedd/officedd_photo/images:/app/images
+      - /var/www/html/officedd/officedd_photo/images/images_name:/app/images
     restart: unless-stopped
 
   rabbitmq:
