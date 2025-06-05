@@ -42,34 +42,30 @@ async def save_to_db(image_id, embeddings):
 
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
-        payload = json.loads(message.body.decode())
-        images = payload.get("images", [])
+        try:
+            payload = json.loads(message.body.decode())
+            images = payload.get("images", [])
+            for img in images:
+                image_id = img.get("image_id")
+                image_filename = img.get("image_name")
+                image_path = os.path.join(IMAGE_BASE_PATH, image_filename)
 
-        for img in images:
-            image_id = img.get("image_id")
-            image_filename = img.get("image_name")
+                print(f"📥 กำลังประมวลผล image_id={image_id} path={image_path}")
 
-            # สร้าง path ที่ถูกต้องสำหรับรูปภาพ
-            image_path = os.path.join(IMAGE_BASE_PATH, image_filename)
+                try:
+                    image = Image.open(image_path).convert("RGB")
+                    image_np = np.array(image)
+                    faces = app.get(image_np)
 
-            print(f"📥 กำลังประมวลผล image_id={image_id} path={image_path}")
+                    print(f"🧠 พบ {len(faces)} ใบหน้า")
 
-            try:
-                image = Image.open(image_path).convert("RGB")
-                image_np = np.array(image)
-                faces = app.get(image_np)
+                    embeddings = [face.embedding.tolist() for face in faces]
+                    await save_to_db(image_id, embeddings)
 
-                print(f"🧠 พบ {len(faces)} ใบหน้า")
-
-                # สร้าง embeddings สำหรับแต่ละใบหน้า
-                embeddings = [face.embedding.tolist() for face in faces]
-
-                # บันทึก embeddings ลงในฐานข้อมูล
-                await save_to_db(image_id, embeddings)
-
-            except Exception as e:
-                print(f"❌ เกิดข้อผิดพลาดกับ image_id={image_id}: {str(e)}")
-
+                except Exception as e:
+                    print(f"❌ เกิดข้อผิดพลาดกับ image_id={image_id}: {str(e)}")
+        except Exception as e:
+            print(f"❌ เกิดข้อผิดพลาดในการประมวลผลข้อความ: {str(e)}")
 async def main():
     try:
         connection = await aio_pika.connect_robust("amqp://skko:skkospiderman@rabbitmq:5672/")
