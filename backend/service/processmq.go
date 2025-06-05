@@ -19,6 +19,11 @@ type ImagePayload struct {
 }
 
 func SendProcessMq(images []db.ImageProcess) error {
+	if len(images) == 0 {
+		log.Println("⚠️ No images to process")
+		return nil
+	}
+
 	var mappedImages []Image
 	for _, img := range images {
 		mappedImages = append(mappedImages, Image{
@@ -36,33 +41,45 @@ func SendProcessMq(images []db.ImageProcess) error {
 		return fmt.Errorf("marshal failed: %w", err)
 	}
 
+	log.Printf("📦 JSON Payload: %s\n", string(body))
+
 	conn, err := amqp.Dial("amqp://skko:skkospiderman@rabbitmq:5672/")
 	if err != nil {
 		return fmt.Errorf("rabbitmq dial failed: %w", err)
 	}
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("⚠️ Error closing connection: %v\n", err)
+		}
+	}()
 
 	ch, err := conn.Channel()
 	if err != nil {
 		return fmt.Errorf("channel failed: %w", err)
 	}
+	defer func() {
+		if err := ch.Close(); err != nil {
+			log.Printf("⚠️ Error closing channel: %v\n", err)
+		}
+	}()
 
 	q, err := ch.QueueDeclare(
-		"face_images_queue",
-		true,
-		false,
-		false,
-		false,
-		nil,
+		"face_images_queue", // queue name
+		true,                // durable
+		false,               // delete when unused
+		false,               // exclusive
+		false,               // no-wait
+		nil,                 // arguments
 	)
 	if err != nil {
 		return fmt.Errorf("queue declare failed: %w", err)
 	}
 
 	err = ch.Publish(
-		"",
-		q.Name,
-		false,
-		false,
+		"",     // exchange
+		q.Name, // routing key (queue name)
+		false,  // mandatory
+		false,  // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
@@ -73,7 +90,5 @@ func SendProcessMq(images []db.ImageProcess) error {
 	}
 
 	log.Println("✅ ส่ง images ไปยัง RabbitMQ แล้ว")
-	defer ch.Close()
 	return nil
-
 }
