@@ -37,7 +37,11 @@ async def on_message(message: aio_pika.IncomingMessage):
 
 async def main():
     try:
-        connection = await aio_pika.connect_robust("amqp://skko:skkospiderman@rabbitmq/")
+        connection = await aio_pika.connect_robust(
+            "amqp://skko:skkospiderman@rabbitmq/",
+            heartbeat=60,
+            timeout=60
+        )
         channel = await connection.channel()
         queue = await channel.declare_queue("face_jobs", durable=True)
         await queue.consume(on_message)
@@ -45,6 +49,3 @@ async def main():
         await asyncio.Future()  # รอไม่สิ้นสุด
     except Exception as e:
         print("❌ เชื่อมต่อ RabbitMQ ไม่สำเร็จ:", str(e))
-
-if __name__ == "__main__":
-    asyncio.run(main())
