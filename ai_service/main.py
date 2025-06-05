@@ -1,50 +1,80 @@
-import os
 import aio_pika
 import asyncio
 import json
+import mysql.connector
 from insightface.app import FaceAnalysis
 from PIL import Image
 import numpy as np
 
+# ตั้งค่า InsightFace
 app = FaceAnalysis(name="buffalo_l")
 app.prepare(ctx_id=0, det_size=(640, 640))
+
+# ตั้งค่า MySQL
+db_config = {
+    'host': '192.168.0.121',
+    'user': 'mysql_121',
+    'password': 'hdcdatarit9esoydld]o8i',
+    'database': 'officedd_photo'
+}
+
+async def save_to_db(image_id, embeddings):
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+
+        # แปลง embeddings เป็น JSON string
+        embeddings_json = json.dumps(embeddings)
+
+        # SQL query สำหรับบันทึกข้อมูล
+        query = "INSERT INTO face_embeddings (image_id, embeddings) VALUES (%s, %s)"
+        cursor.execute(query, (image_id, embeddings_json))
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+        print(f"✅ บันทึก embeddings สำหรับ image_id={image_id} สำเร็จ")
+    except mysql.connector.Error as err:
+        print(f"❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล: {err}")
 
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
         payload = json.loads(message.body.decode())
         images = payload.get("images", [])
 
-        images_dir = os.getenv("IMAGES_DIR", "/app/images")
-
         for img in images:
             image_id = img.get("image_id")
-            image_name = img.get("image_name")
+            image_path = img.get("image_name")
 
-            # สร้าง path ของไฟล์ภาพ
-            image_path = os.path.join(images_dir, image_name)
-
-            print(f"Processing image_id: {image_id} path: {image_path}")
+            print(f"📥 กำลังประมวลผล image_id={image_id} path={image_path}")
 
             try:
                 image = Image.open(image_path).convert("RGB")
                 image_np = np.array(image)
                 faces = app.get(image_np)
-                print(f"Detected {len(faces)} faces")
-                # ประมวลผลต่อ เช่น สร้าง embedding, บันทึกลง DB หรือส่งต่อ API
-            except FileNotFoundError:
-                print(f"File not found: {image_path}")
+
+                print(f"🧠 พบ {len(faces)} ใบหน้า")
+
+                # สร้าง embeddings สำหรับแต่ละใบหน้า
+                embeddings = [face.embedding.tolist() for face in faces]
+
+                # บันทึก embeddings ลงในฐานข้อมูล
+                await save_to_db(image_id, embeddings)
+
             except Exception as e:
-                print(f"Error processing image {image_path}: {e}")
+                print(f"❌ เกิดข้อผิดพลาดกับ image_id={image_id}: {str(e)}")
 
 async def main():
-    connection = await aio_pika.connect_robust("amqp://skko:skkospiderman@rabbitmq:5672/")
-    channel = await connection.channel()
-    queue = await channel.declare_queue("face_images_queue", durable=True)
+    try:
+        connection = await aio_pika.connect_robust("amqp://skko:skkospiderman@rabbitmq:5672/")
+        channel = await connection.channel()
+        queue = await channel.declare_queue("face_images_queue", durable=True)
 
-    await queue.consume(on_message)
-
-    print("AI service is listening on face_images_queue")
-    await asyncio.Future()  # keep running
+        await queue.consume(on_message)
+        print("✅ AI Service พร้อมทำงานแล้ว...")
+        await asyncio.Future()
+    except Exception as e:
+        print(f"❌ เชื่อมต่อ RabbitMQ ไม่สำเร็จ: {str(e)}")
 
 if __name__ == "__main__":
     asyncio.run(main())
