@@ -5,6 +5,9 @@ import mysql.connector
 from insightface.app import FaceAnalysis
 from PIL import Image
 import numpy as np
+import os
+
+IMAGE_BASE_PATH = "/app/images"  # ปรับตาม path ที่ mount จริงใน container
 
 # ตั้งค่า InsightFace
 app = FaceAnalysis(name="buffalo_l")
@@ -44,7 +47,10 @@ async def on_message(message: aio_pika.IncomingMessage):
 
         for img in images:
             image_id = img.get("image_id")
-            image_path = img.get("image_name")
+            image_filename = img.get("image_name")
+
+            # สร้าง path ที่ถูกต้องสำหรับรูปภาพ
+            image_path = os.path.join(IMAGE_BASE_PATH, image_filename)
 
             print(f"📥 กำลังประมวลผล image_id={image_id} path={image_path}")
 
