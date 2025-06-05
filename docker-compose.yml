@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
     depends_on:
       - rabbitmq
 
@@ -15,7 +15,7 @@ services:
       context: ./ai_service
       dockerfile: Dockerfile
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
     depends_on:
       - rabbitmq
 

@@ -8,6 +8,5 @@ import (
 
 func Setup(v1 fiber.Router, conn *sql.DB) {
 	SetupImagesAPI(v1, conn)
-	SetupFaceResultAPI(v1, conn) // POST /api/face-result ✅ เพิ่มอันนี้
-
+	SetupPhotoAPI(v1, conn)
 }

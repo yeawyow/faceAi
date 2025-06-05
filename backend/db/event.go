@@ -22,6 +22,11 @@ type Event struct {
 	EventName string `json:"event_name"`
 	// เพิ่มฟิลด์อื่นๆ ถ้ามี เช่น Description, Location, StartDate ฯลฯ
 }
+type ImageProcess struct {
+	ImageID   int    `json:"image_id"`
+	ImageName string `json:"image_name"`
+	// เพิ่มฟิลด์อื่นๆ ถ้ามี เช่น Description, Location, StartDate ฯลฯ
+}
 
 func GetAllEvents(db *sql.DB) ([]Event, error) {
 	query := `SELECT event_id, event_name FROM event ORDER BY event_id DESC`

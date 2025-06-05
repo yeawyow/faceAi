@@ -2,6 +2,7 @@ package router
 
 import (
 	"apiPhoto/db"
+	"apiPhoto/service"
 	"database/sql"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,7 +18,9 @@ func SetupPhotoAPI(router fiber.Router, conn *sql.DB) {
 		PhotoAPI.Get("/fetchall", func(c *fiber.Ctx) error {
 			return FetchallEventHandler(c, conn)
 		})
-
+		PhotoAPI.Post("/process", func(c *fiber.Ctx) error {
+			return ProcessEventHandler(c, conn)
+		})
 	}
 }
 
@@ -42,4 +45,21 @@ func FetchallEventHandler(c *fiber.Ctx, conn *sql.DB) error {
 
 	// ส่งข้อมูล events กลับเป็น JSON
 	return c.JSON(fiber.Map{"events": events})
+}
+
+func ProcessEventHandler(c *fiber.Ctx, conn *sql.DB) error {
+	action := c.FormValue("action")
+	if action == "process" {
+		images, err := db.ProcessImage(conn)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		if err := service.SendProcessMq(images); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		return c.JSON(fiber.Map{"status": "ส่งข้อมูลสำเร็จ", "images": images})
+	}
+	return c.SendString("No action performed")
 }
