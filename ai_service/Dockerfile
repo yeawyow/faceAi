@@ -1,9 +1,8 @@
 FROM python:3.10-slim
 
-# ตั้ง working directory ใน container
 WORKDIR /app
 
-# ติดตั้ง dependencies ที่จำเป็นสำหรับ opencv, insightface และอื่น ๆ
+# ติดตั้งเครื่องมือและไลบรารีที่จำเป็น
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
@@ -12,21 +11,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     wget \
     unzip \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements.txt เข้า container
+# ติดตั้ง Python packages
 COPY requirements.txt ./
-
-# ติดตั้ง python packages
 RUN pip install --no-cache-dir -r requirements.txt
+
+# ติดตั้ง insightface ที่ใหม่ที่สุด
 RUN pip install --no-cache-dir --upgrade insightface
 
-# ดาวน์โหลดโมเดลล่วงหน้าเพื่อหลีกเลี่ยงปัญหา RuntimeError
-RUN mkdir -p /root/.insightface/models && \
-    wget -O /root/.insightface/models/retinaface_r50_v1.zip https://github.com/deepinsight/insightface/releases/download/v0.7/retinaface_r50_v1.zip && \
-    unzip /root/.insightface/models/retinaface_r50_v1.zip -d /root/.insightface/models/retinaface_r50_v1
-
-# Copy source code เข้า container
+# คัดลอกโค้ดเข้า container
 COPY . .
 
 # สั่งรันแอป
