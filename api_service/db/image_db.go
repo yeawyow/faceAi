@@ -21,7 +21,7 @@ func GetImageByName(db *sql.DB, imageName string) (*Image, error) {
 		if err == sql.ErrNoRows {
 			return nil, nil // ไม่พบข้อมูล
 		}
-		return nil, fmt.Errorf("failed to query image: %w", err)
+		return nil, fmt.Errorf("failed2 to query image: %w", err)
 	}
 
 	return &img, nil
