@@ -13,7 +13,8 @@ IMAGE_BASE_PATH = "/app/images"  # ปรับตาม path ที่ mount �
 
 # ตั้งค่า InsightFace
 app = FaceAnalysis(name="buffalo_l")
-app.prepare(ctx_id=0, det_size=(1024, 1024))
+app.prepare(ctx_id=0, det_size=(800, 800))
+app.threshold = 0.5
 
 # ตั้งค่า MySQL
 db_config = {

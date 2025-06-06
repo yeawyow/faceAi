@@ -17,6 +17,7 @@ COPY requirements.txt ./
 
 # ติดตั้ง python packages
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade insightface
 
 # Copy source code เข้า container
 COPY . .
