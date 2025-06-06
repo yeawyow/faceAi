@@ -1,3 +1,5 @@
+
+
 services:
   api-service:
     image: imageapi:latest
@@ -7,6 +9,8 @@ services:
       RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
     depends_on:
       - rabbitmq
+    networks:
+      - mynet
 
   ai-service:
     image: imageai:latest
@@ -19,23 +23,25 @@ services:
       - /var/www/html/officedd/officedd_photo/images/images_name:/app/images
     deploy:
       replicas: 5
+    networks:
+      - mynet
 
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - target: 15672
-        published: 15672
-        protocol: tcp
-        mode: host
-      - target: 5672
-        published: 5672
-        protocol: tcp
-        mode: host
+      - "15672:15672"   # RabbitMQ management UI
+      - "5672:5672"     # RabbitMQ AMQP port
     environment:
       RABBITMQ_DEFAULT_USER: skko
       RABBITMQ_DEFAULT_PASS: skkospiderman
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - mynet
 
 volumes:
   rabbitmq_data:
+
+networks:
+  mynet:
+    driver: overlay
