@@ -90,7 +90,7 @@ async def main():
         # รับทีละ 1 งาน (prefetch=1)
         await channel.set_qos(prefetch_count=1)
 
-        queue = await channel.declare_queue("images_queue", durable=True)
+        queue = await channel.declare_queue("image_queue", durable=True)
         await queue.consume(on_message)
 
         print("✅ AI Worker พร้อมทำงานแล้ว...")
