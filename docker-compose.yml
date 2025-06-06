@@ -1,4 +1,4 @@
-
+version: "3.9"
 
 services:
   rabbitmq:
@@ -28,5 +28,8 @@ services:
       - /var/www/html/officedd/officedd_photo/images/images_name:/app/images
     depends_on:
       - rabbitmq
-    deploy:
-      replicas: 1  # ใน compose ธรรมดา ไม่มี replicas ให้ใช้แค่ 1 container เท่านั้น
+    # ลบ deploy ออก เพราะ docker-compose ธรรมดาไม่รองรับ
+
+networks:
+  default:
+    driver: bridge
