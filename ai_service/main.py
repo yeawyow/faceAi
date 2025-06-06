@@ -13,9 +13,9 @@ import json
 IMAGE_BASE_PATH = "/app/images"  # ปรับตาม path ที่ mount จริงใน container
 
 # ตั้งค่า InsightFace
-# app = FaceAnalysis(name="buffalo_l")
-app = FaceAnalysis(name="retinaface_r50_v1")
-app.prepare(ctx_id=0, det_size=(1200, 1200))
+app = FaceAnalysis(name="buffalo_l")
+# app = FaceAnalysis(name="retinaface_r50_v1")
+app.prepare(ctx_id=0, det_size=(2048, 2048))
 app.threshold = 0.4
 
 # ตั้งค่า MySQL
