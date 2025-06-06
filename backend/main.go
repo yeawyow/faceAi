@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/streadway/amqp"
 )
 
 var dbConn *sql.DB
@@ -24,12 +25,16 @@ func main() {
 	}))
 
 	dbConn = db.ConnectDB()
-
 	defer dbConn.Close()
+	mqConn, err := amqp.Dial("amqp://skko:skkospiderman@rabbitmq:5672/")
+	if err != nil {
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
+	defer mqConn.Close()
 
 	// ส่ง conn ให้ router หรือ service ที่ต้องใช้
 	router := app.Group("/api")
-	v1.Setup(router, dbConn)
+	v1.Setup(router, dbConn, mqConn)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, Go langs!")

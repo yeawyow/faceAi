@@ -11,18 +11,20 @@ services:
       - rabbitmq
 
   ai-service:
-    build:
-      context: ./ai_service
-      dockerfile: Dockerfile
-    environment:
-      RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
-      IMAGES_DIR: /app/images
+  build:
+    context: ./ai_service
+    dockerfile: Dockerfile
+  environment:
+    RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
+    IMAGES_DIR: /app/images
+  depends_on:
+    - rabbitmq
+  volumes:
+    - /var/www/html/officedd/officedd_photo/images/images_name:/app/images
+  restart: unless-stopped
+  deploy:
+    replicas: 5
 
-    depends_on:
-      - rabbitmq
-    volumes:
-      - /var/www/html/officedd/officedd_photo/images/images_name:/app/images
-    restart: unless-stopped
 
   rabbitmq:
     image: rabbitmq:3-management
