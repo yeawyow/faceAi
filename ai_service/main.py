@@ -24,28 +24,31 @@ db_config = {
 }
 
 async def save_to_db(image_id, embeddings):
+    connection = None
+    cursor = None
     try:
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
-          # flatten embeddings: list of list => 1D list
         flat_embeddings = np.array(embeddings).flatten().tolist()
-
-        # แปลงเป็น JSON string
         embeddings_json = json.dumps(flat_embeddings)
-        # SQL query สำหรับบันทึกข้อมูล
+
         query = "INSERT INTO face_embeddings (image_id, embeddings) VALUES (%s, %s)"
         cursor.execute(query, (image_id, embeddings_json))
-          # 2. Update process_status_id ในตาราง images เป็น 2
+
         update_query = "UPDATE images SET process_status_id = %s WHERE images_id = %s"
         cursor.execute(update_query, (3, image_id))
 
         connection.commit()
-        cursor.close()
-        connection.close()
         print(f"✅ บันทึก embeddings สำหรับ image_id={image_id} สำเร็จ")
     except mysql.connector.Error as err:
         print(f"❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล: {err}")
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
 
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
@@ -71,8 +74,10 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 except Exception as e:
                     print(f"❌ เกิดข้อผิดพลาดกับ image_id={image_id}: {str(e)}")
+
         except Exception as e:
             print(f"❌ เกิดข้อผิดพลาดในการประมวลผลข้อความ: {str(e)}")
+
 async def main():
     try:
         connection = await aio_pika.connect_robust("amqp://skko:skkospiderman@rabbitmq:5672/")
