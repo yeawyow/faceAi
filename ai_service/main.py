@@ -35,7 +35,7 @@ async def save_to_db(image_id, embeddings):
         cursor.execute(query, (image_id, embeddings_json))
           # 2. Update process_status_id ในตาราง images เป็น 2
         update_query = "UPDATE images SET process_status_id = %s WHERE images_id = %s"
-        cursor.execute(update_query, (2, image_id))
+        cursor.execute(update_query, (3, image_id))
 
         connection.commit()
         cursor.close()

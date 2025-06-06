@@ -6,7 +6,7 @@ import (
 )
 
 func ProcessImage(db *sql.DB) ([]ImageProcess, error) {
-	query := `SELECT images_id, images_name FROM images WHERE process_status_id='1' ORDER BY images_id ASC`
+	query := `SELECT images_id, images_name FROM images WHERE process_status_id in ('1','2') ORDER BY images_id ASC`
 
 	rows, err := db.Query(query)
 	if err != nil {
