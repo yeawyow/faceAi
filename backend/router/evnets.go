@@ -54,7 +54,9 @@ func ProcessEventHandler(c *fiber.Ctx, conn *sql.DB) error {
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 		}
-
+		if len(images) == 0 {
+			return c.JSON(fiber.Map{"status": "ไม่มีภาพที่ต้องประมวลผล"})
+		}
 		if err := service.SendProcessMq(images); err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 		}
