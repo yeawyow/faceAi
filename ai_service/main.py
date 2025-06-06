@@ -63,7 +63,9 @@ async def process_image(img):
         face_count = len(faces)
         print(f"🧠 พบ {face_count} ใบหน้า")
 
+        # ✅ สร้าง embeddings ก่อนส่ง
         embeddings = [face.embedding.tolist() for face in faces]
+
         await save_to_db(image_id, embeddings, face_count)
 
     except Exception as e:
