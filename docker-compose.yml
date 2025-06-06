@@ -1,4 +1,4 @@
-version: "3.9"
+
 
 services:
   rabbitmq:
@@ -9,12 +9,6 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    networks:
-      - backend
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
 
   api-service:
     image: imageapi:latest
@@ -22,10 +16,8 @@ services:
       RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
     ports:
       - "8000:8000"
-    networks:
-      - backend
-    deploy:
-      replicas: 1
+    depends_on:
+      - rabbitmq
 
   ai-service:
     image: imageai:latest
@@ -34,11 +26,7 @@ services:
       IMAGES_DIR: /app/images
     volumes:
       - /var/www/html/officedd/officedd_photo/images/images_name:/app/images
-    networks:
-      - backend
+    depends_on:
+      - rabbitmq
     deploy:
-      replicas: 5
-
-networks:
-  backend:
-    driver: overlay
+      replicas: 1  # ใน compose ธรรมดา ไม่มี replicas ให้ใช้แค่ 1 container เท่านั้น
