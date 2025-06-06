@@ -1,8 +1,7 @@
 services:
-  api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+  api-service:
+    image: imageapi:latest
+
     ports:
       - "8000:8000"
     environment:
@@ -11,9 +10,8 @@ services:
       - rabbitmq
 
   ai-service:
-    build:
-      context: ./ai_service
-      dockerfile: Dockerfile
+    image: imageai:latest
+
     environment:
       RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
       IMAGES_DIR: /app/images
