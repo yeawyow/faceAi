@@ -69,7 +69,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     face_count = len(faces)
 
                     print(f"🧠 พบ {len(faces)} ใบหน้า")
-                    print(f"{face_count}")
+                    print(f"dfdsf {face_count} sdffs" )
                     embeddings = [face.embedding.tolist() for face in faces]
                     await save_to_db(image_id, embeddings,face_count)
 
