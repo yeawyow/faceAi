@@ -1,3 +1,4 @@
+import os
 os.environ['ORT_DISABLE_CPU_AFFINITY'] = '1'  # 👈 ต้องอยู่ตรงนี้ก่อน import onnxruntime หรือ insightface
 import aio_pika
 import asyncio
@@ -7,7 +8,7 @@ from insightface.app import FaceAnalysis
 from PIL import Image
 import numpy as np
 import json
-import os
+
 
 IMAGE_BASE_PATH = "/app/images"  # ปรับตาม path ที่ mount จริงใน container
 
