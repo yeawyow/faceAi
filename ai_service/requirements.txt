@@ -1,5 +1,5 @@
 # requirements.txt
-insightface
+insightface==0.7
 numpy
 pillow
 aio_pika  # สำหรับเชื่อม RabbitMQ
