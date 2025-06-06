@@ -1,3 +1,4 @@
+os.environ['ORT_DISABLE_CPU_AFFINITY'] = '1'  # 👈 ต้องอยู่ตรงนี้ก่อน import onnxruntime หรือ insightface
 import aio_pika
 import asyncio
 import json
@@ -7,14 +8,14 @@ from PIL import Image
 import numpy as np
 import json
 import os
-os.environ['ORT_DISABLE_CPU_AFFINITY'] = '1'  # 👈 ต้องอยู่ตรงนี้ก่อน import onnxruntime หรือ insightface
 
 IMAGE_BASE_PATH = "/app/images"  # ปรับตาม path ที่ mount จริงใน container
 
 # ตั้งค่า InsightFace
-app = FaceAnalysis(name="buffalo_l")
-app.prepare(ctx_id=0, det_size=(800, 800))
-app.threshold = 0.5
+# app = FaceAnalysis(name="buffalo_l")
+app = FaceAnalysis(name="retinaface_r50_v1")
+app.prepare(ctx_id=0, det_size=(1200, 1200))
+app.threshold = 0.4
 
 # ตั้งค่า MySQL
 db_config = {
