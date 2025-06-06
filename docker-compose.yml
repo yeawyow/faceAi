@@ -1,16 +1,16 @@
+version: "3.9"
+
 services:
   rabbitmq:
     image: rabbitmq:3-management
     environment:
       RABBITMQ_DEFAULT_USER: skko
       RABBITMQ_DEFAULT_PASS: skkospiderman
-      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit tcp_listeners [{\"0.0.0.0\", 5672}]"
-
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
     ports:
-      - "5672:5672"     # AMQP protocol port
-      - "15672:15672"   # Management UI port
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
     deploy:
       replicas: 1
       restart_policy:
@@ -20,10 +20,10 @@ services:
     image: imageapi:latest
     environment:
       RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
-    depends_on:
-      - rabbitmq
     ports:
       - "8000:8000"
+    networks:
+      - backend
     deploy:
       replicas: 1
 
@@ -32,12 +32,12 @@ services:
     environment:
       RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
       IMAGES_DIR: /app/images
-    depends_on:
-      - rabbitmq
     volumes:
       - /var/www/html/officedd/officedd_photo/images/images_name:/app/images
+    networks:
+      - backend
     deploy:
       replicas: 5
 
-volumes:
-  rabbitmq_data:
+networks:
+  backend:
