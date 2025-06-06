@@ -36,7 +36,7 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "image_name is required"})
 	}
 
-	img, err := db.GetImageByName(conn, req.ImageName)
+	img, err := db.SelectImageByName(conn, req.ImageName)
 	if err != nil {
 		log.Println("DB error:", err)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})

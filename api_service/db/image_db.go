@@ -2,26 +2,23 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 )
 
-type Imagep struct {
-	ImageID   int    `json:"images_id"`
-	ImageName string `json:"images_name"`
+type Image struct {
+	ImageName string `json:"image_naem"`
 }
 
-func GetImageByName(db *sql.DB, imageName string) (*Imagep, error) {
-	query := `SELECT images_id, images_name FROM events WHERE images_name = ?`
-
+func SelectImageByName(db *sql.DB, imageName string) (*Image, error) {
+	query := "SELECT id, image_name, url FROM images WHERE image_name = ? LIMIT 1"
 	row := db.QueryRow(query, imageName)
 
-	var img Imagep
-	err := row.Scan(&img.ImageID, &img.ImageName)
+	var img Image
+	err := row.Scan(&img.ImageName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // ไม่พบข้อมูล
+			return nil, nil // ไม่มีข้อมูล
 		}
-		return nil, fmt.Errorf("failed2 to query imagesdfsf: %w", err)
+		return nil, err
 	}
 
 	return &img, nil
