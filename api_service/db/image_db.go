@@ -11,7 +11,7 @@ type Image struct {
 }
 
 func GetImageByName(db *sql.DB, imageName string) (*Image, error) {
-	query := `SELECT images_id, images_name FROM Images WHERE images_name = ?`
+	query := `SELECT images_id, images_name FROM images WHERE images_name = ?`
 
 	row := db.QueryRow(query, imageName)
 
