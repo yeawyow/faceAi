@@ -88,8 +88,8 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "Image sent to processing queue",
-
+		"message":    "Image sent to processing queue",
+		"image_id":   img.ImageId,
 		"image_name": img.ImageName,
 	})
 }
