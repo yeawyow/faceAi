@@ -41,3 +41,4 @@ services:
 
 networks:
   backend:
+    driver: overlay
