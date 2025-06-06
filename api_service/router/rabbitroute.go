@@ -16,9 +16,9 @@ type ImageRequest struct {
 }
 
 func SetupRouteRab(router fiber.Router, conn *sql.DB, mqConn *amqp.Connection) {
-	PhotoAPI := router.Group("/")
+	PhotoAPI := router.Group("/test")
 	{
-		PhotoAPI.Post("uploadImage", func(c *fiber.Ctx) error {
+		PhotoAPI.Post("/uploadImage", func(c *fiber.Ctx) error {
 			return ImageReq(c, conn, mqConn)
 		})
 	}
@@ -36,7 +36,7 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "image_name is required"})
 	}
 
-	img, err := db.GetImageByName(conn, req.ImageName)
+	img, err := db.GetAllEvents(conn)
 	if err != nil {
 		log.Println("DB error:", err)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
@@ -89,7 +89,5 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Image sent to processing queue",
-
-		"image_name": img.ImageName,
 	})
 }
