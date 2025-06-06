@@ -4,6 +4,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: skko
       RABBITMQ_DEFAULT_PASS: skkospiderman
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit tcp_listeners [{\"0.0.0.0\", 5672}]"
+
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     ports:
