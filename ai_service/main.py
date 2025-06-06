@@ -28,14 +28,12 @@ async def save_to_db(image_id, embeddings, faces):
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
-        # แปลง embeddings เป็น JSON string
+        # แปลง embeddings เป็น JSON string แน่นอน
         embeddings_json = json.dumps(embeddings)
 
-        # บันทึก embeddings (JSON) ลงตาราง face_embeddings
         query = "INSERT INTO face_embeddings (image_id, embeddings) VALUES (%s, %s)"
         cursor.execute(query, (image_id, embeddings_json))
 
-        # อัปเดต process_status_id และจำนวนใบหน้าในตาราง images
         update_query = "UPDATE images SET process_status_id = %s, faces = %s WHERE images_id = %s"
         cursor.execute(update_query, (3, len(faces), image_id))
 
