@@ -40,7 +40,7 @@ async def save_to_db(image_id, embeddings,face_count):
         cursor.execute(update_query, (3,face_count, image_id))
 
         connection.commit()
-        print(f"✅ บันทึก embeddings สำหรับ image_id={image_id} สำเร็จ")
+        print(f"✅ บันทึก embeddings lll สำหรับ image_id={image_id} สำเร็จ")
     except mysql.connector.Error as err:
         print(f"❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล: {err}")
     finally:
@@ -68,7 +68,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     faces = app.get(image_np)
                     face_count = len(faces)
                     print(f"🧠 พบ {len(faces)} ใบหน้า")
-
+                    
                     embeddings = [face.embedding.tolist() for face in faces]
                     await save_to_db(image_id, embeddings,face_count)
 
