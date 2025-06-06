@@ -22,7 +22,7 @@ db_config = {
     'database': 'officedd_photo'
 }
 
-async def save_to_db(image_id, embeddings):
+async def save_to_db(image_id, embeddings,faces):
     try:
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
@@ -34,8 +34,8 @@ async def save_to_db(image_id, embeddings):
         query = "INSERT INTO face_embeddings (image_id, embeddings) VALUES (%s, %s)"
         cursor.execute(query, (image_id, embeddings_json))
           # 2. Update process_status_id ในตาราง images เป็น 2
-        update_query = "UPDATE images SET process_status_id = %s WHERE images_id = %s"
-        cursor.execute(update_query, (3, image_id))
+        update_query = "UPDATE images  SET process_status_id = %s,faces=%s WHERE images_id = %s"
+        cursor.execute(update_query, (3,faces, image_id))
 
         connection.commit()
         cursor.close()
@@ -64,7 +64,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     print(f"🧠 พบ {len(faces)} ใบหน้า")
 
                     embeddings = [face.embedding.tolist() for face in faces]
-                    await save_to_db(image_id, embeddings)
+                    await save_to_db(image_id, embeddings,faces)
 
                 except Exception as e:
                     print(f"❌ เกิดข้อผิดพลาดกับ image_id={image_id}: {str(e)}")
