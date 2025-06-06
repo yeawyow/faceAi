@@ -4,15 +4,15 @@ import (
 	"database/sql"
 )
 
-type image struct {
+type Image struct {
 	ImageName string `json:"image_naem"`
 }
 
-func SelectImageByName(db *sql.DB, imageName string) (*image, error) {
-	query := "SELECT  image_name FROM images WHERE image_name = ? LIMIT 1"
+func SelectImageByName(db *sql.DB, imageName string) (*Image, error) {
+	query := "SELECT  images_name FROM images WHERE images_name = ? LIMIT 1"
 	row := db.QueryRow(query, imageName)
 
-	var img image
+	var img Image
 	err := row.Scan(&img.ImageName)
 	if err != nil {
 		if err == sql.ErrNoRows {
