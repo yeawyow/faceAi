@@ -2,12 +2,10 @@ package router
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/streadway/amqp"
 )
 
 type UploadRequest struct {
@@ -20,58 +18,58 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func sendToRabbitMQ(imageIDs []int) (string, error) {
-	conn, err := amqp.Dial("amqp://skko:skkospiderman@rabbitmq:5672/")
-	if err != nil {
-		return "", err
-	}
-	defer conn.Close()
+// func sendToRabbitMQ(imageIDs []int) (string, error) {
+// 	conn, err := amqp.Dial("amqp://skko:skkospiderman@rabbitmq:5672/")
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer conn.Close()
 
-	ch, err := conn.Channel()
-	if err != nil {
-		return "", err
-	}
-	defer ch.Close()
+// 	ch, err := conn.Channel()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer ch.Close()
 
-	queueName := "face_jobs"
-	_, err = ch.QueueDeclare(
-		queueName,
-		true,  // durable
-		false, // delete when unused
-		false, // exclusive
-		false, // no-wait
-		nil,
-	)
-	if err != nil {
-		return "", err
-	}
+// 	queueName := "face_jobs"
+// 	_, err = ch.QueueDeclare(
+// 		queueName,
+// 		true,  // durable
+// 		false, // delete when unused
+// 		false, // exclusive
+// 		false, // no-wait
+// 		nil,
+// 	)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	body, err := json.Marshal(map[string]interface{}{
-		"image_ids": imageIDs,
-	})
-	if err != nil {
-		return "", err
-	}
+// 	body, err := json.Marshal(map[string]interface{}{
+// 		"image_ids": imageIDs,
+// 	})
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	log.Printf("📤 Sending to RabbitMQ queue '%s': %s", queueName, string(body))
+// 	log.Printf("📤 Sending to RabbitMQ queue '%s': %s", queueName, string(body))
 
-	err = ch.Publish(
-		"",        // exchange
-		queueName, // routing key
-		false,     // mandatory
-		false,     // immediate
-		amqp.Publishing{
-			DeliveryMode: amqp.Persistent,
-			ContentType:  "application/json",
-			Body:         body,
-		},
-	)
-	if err != nil {
-		return "", err
-	}
+// 	err = ch.Publish(
+// 		"",        // exchange
+// 		queueName, // routing key
+// 		false,     // mandatory
+// 		false,     // immediate
+// 		amqp.Publishing{
+// 			DeliveryMode: amqp.Persistent,
+// 			ContentType:  "application/json",
+// 			Body:         body,
+// 		},
+// 	)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	return string(body), nil
-}
+// 	return string(body), nil
+// }
 
 func SetupImagesAPI(router fiber.Router, conn *sql.DB) {
 	PhotoAPI := router.Group("/images")

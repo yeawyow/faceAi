@@ -24,32 +24,27 @@ func SetupRouteRab(router fiber.Router, conn *sql.DB, mqConn *amqp.Connection) {
 	}
 }
 
+const queueName = "image_queue"
+
 func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 	var req ImageRequest
-
-	// แปลง JSON body เป็น struct
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request format",
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request format"})
 	}
 
 	if req.ImageName == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "image_name is required",
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "image_name is required"})
 	}
 
-	// 🔍 ค้นหาภาพจาก DB ตามชื่อ
 	img, err := db.GetImageByName(conn, req.ImageName)
 	if err != nil {
+		log.Println("DB error:", err)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 	if img == nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Image not found"})
 	}
 
-	// เชื่อมต่อ RabbitMQ
 	ch, err := mqConn.Channel()
 	if err != nil {
 		log.Println("RabbitMQ channel error:", err)
@@ -57,9 +52,8 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 	}
 	defer ch.Close()
 
-	// ประกาศ queue
 	q, err := ch.QueueDeclare(
-		"image_queue",
+		queueName,
 		true,
 		false,
 		false,
@@ -67,13 +61,16 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 		nil,
 	)
 	if err != nil {
+		log.Println("Queue declare error:", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Queue declare error"})
 	}
 
-	// สร้าง payload
-	body, _ := json.Marshal(img)
+	body, err := json.Marshal(img)
+	if err != nil {
+		log.Println("Marshal error:", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to marshal image data"})
+	}
 
-	// ส่ง message ไป queue
 	err = ch.Publish(
 		"",
 		q.Name,
@@ -86,6 +83,7 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 		},
 	)
 	if err != nil {
+		log.Println("Failed to publish message:", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to send to queue"})
 	}
 
