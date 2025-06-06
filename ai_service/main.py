@@ -5,6 +5,7 @@ import mysql.connector
 from insightface.app import FaceAnalysis
 from PIL import Image
 import numpy as np
+import json
 import os
 os.environ['ORT_DISABLE_CPU_AFFINITY'] = '1'  # 👈 ต้องอยู่ตรงนี้ก่อน import onnxruntime หรือ insightface
 
@@ -27,14 +28,16 @@ async def save_to_db(image_id, embeddings):
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
-        # แปลง embeddings เป็น JSON string
-        embeddings_json = json.dumps(embeddings)
+          # flatten embeddings: list of list => 1D list
+        flat_embeddings = np.array(embeddings).flatten().tolist()
 
+        # แปลงเป็น JSON string
+        embeddings_json = json.dumps(flat_embeddings)
         # SQL query สำหรับบันทึกข้อมูล
         query = "INSERT INTO face_embeddings (image_id, embeddings) VALUES (%s, %s)"
         cursor.execute(query, (image_id, embeddings_json))
           # 2. Update process_status_id ในตาราง images เป็น 2
-        update_query = "UPDATE images  SET process_status_id = %s  WHERE images_id = %s"
+        update_query = "UPDATE images SET process_status_id = %s WHERE images_id = %s"
         cursor.execute(update_query, (3, image_id))
 
         connection.commit()
