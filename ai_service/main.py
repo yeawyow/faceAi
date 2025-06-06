@@ -66,10 +66,11 @@ async def on_message(message: aio_pika.IncomingMessage):
                     image = Image.open(image_path).convert("RGB")
                     image_np = np.array(image)
                     faces = app.get(image_np)
-                    face_count = len(faces)
+                   
                     print(f"🧠 พบ {len(faces)} ใบหน้า")
                     
                     embeddings = [face.embedding.tolist() for face in faces]
+                    face_count = len(faces)
                     await save_to_db(image_id, embeddings,face_count)
 
                 except Exception as e:
