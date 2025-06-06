@@ -1,8 +1,8 @@
 package main
 
 import (
-	"database/sql"
 	"log"
+	"time"
 
 	"apiPhoto/db"
 	v1 "apiPhoto/router"
@@ -12,7 +12,27 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var dbConn *sql.DB
+// ฟังก์ชันเชื่อมต่อ RabbitMQ พร้อม retry
+func connectRabbitMQ(url string) (*amqp.Connection, error) {
+	var conn *amqp.Connection
+	var err error
+
+	maxRetries := 10                 // จำนวนครั้งสูงสุดที่จะลอง
+	retryInterval := 3 * time.Second // เวลาระหว่างลองใหม่
+
+	for i := 0; i < maxRetries; i++ {
+		conn, err = amqp.Dial(url)
+		if err == nil {
+			log.Println("Connected to RabbitMQ!")
+			return conn, nil
+		}
+
+		log.Printf("Failed to connect to RabbitMQ (attempt %d/%d): %v", i+1, maxRetries, err)
+		time.Sleep(retryInterval)
+	}
+
+	return nil, err
+}
 
 func main() {
 	app := fiber.New()
@@ -24,15 +44,18 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	dbConn = db.ConnectDB()
+	// เชื่อมต่อฐานข้อมูล
+	dbConn := db.ConnectDB()
 	defer dbConn.Close()
-	mqConn, err := amqp.Dial("amqp://skko:skkospiderman@rabbitmq:5672/")
+
+	// เชื่อมต่อ RabbitMQ พร้อม retry
+	mqConn, err := connectRabbitMQ("amqp://skko:skkospiderman@rabbitmq:5672/")
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+		log.Fatalf("Failed to connect to RabbitMQ after retries: %v", err)
 	}
 	defer mqConn.Close()
 
-	// ส่ง conn ให้ router หรือ service ที่ต้องใช้
+	// ส่ง connection ให้ router หรือ service ที่ต้องใช้
 	router := app.Group("/api")
 	v1.Setup(router, dbConn, mqConn)
 
