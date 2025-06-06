@@ -36,8 +36,8 @@ async def save_to_db(image_id, embeddings):
         query = "INSERT INTO face_embeddings (image_id, embeddings) VALUES (%s, %s)"
         cursor.execute(query, (image_id, embeddings_json))
 
-        update_query = "UPDATE images SET process_status_id = %s WHERE images_id = %s"
-        cursor.execute(update_query, (3, image_id))
+        update_query = "UPDATE images SET process_status_id = %s,faces= %s WHERE images_id = %s"
+        cursor.execute(update_query, (3,len(flat_embeddings), image_id))
 
         connection.commit()
         print(f"✅ บันทึก embeddings สำหรับ image_id={image_id} สำเร็จ")
