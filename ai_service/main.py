@@ -56,8 +56,8 @@ async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():  # ack message เมื่อออกจากบล็อกนี้
         try:
             payload = json.loads(message.body.decode())
-            image_id = payload.get("image_id")
-            image_name = payload.get("image_name")
+            image_id = payload.get("images_id")
+            image_name = payload.get("images_name")
 
             if not image_id or not image_name:
                 print("❌ ข้อมูลใน message ไม่ครบ")

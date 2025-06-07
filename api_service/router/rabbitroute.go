@@ -4,6 +4,7 @@ import (
 	"apiPhoto/db"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,7 +12,8 @@ import (
 )
 
 type ImageRequest struct {
-	ImageName string `json:"image_name"`
+	ImageId   int    `json:"images_id`
+	ImageName string `json:"images_name"`
 	Actions   string `json:"actions"`
 }
 
@@ -70,6 +72,7 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 		log.Println("Marshal error:", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to marshal image data"})
 	}
+	fmt.Println("📦 JSON payload:", string(body))
 
 	err = ch.Publish(
 		"",
@@ -88,8 +91,8 @@ func ImageReq(c *fiber.Ctx, conn *sql.DB, mqConn *amqp.Connection) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"message":    "Image sent to processing queue",
-		"image_id":   img.ImageId,
-		"image_name": img.ImageName,
+		"message":     "Image sent to processing queue",
+		"images_id":   img.ImageId,
+		"images_name": img.ImageName,
 	})
 }
