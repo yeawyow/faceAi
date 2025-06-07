@@ -19,17 +19,20 @@ services:
     depends_on:
       - rabbitmq
 
+  services:
   ai-service:
-    image: imageai:latest
+    image: python:3.10-slim
     environment:
       RABBITMQ_URL: amqp://skko:skkospiderman@rabbitmq:5672/
       IMAGES_DIR: /app/images
     volumes:
-      - /var/www/html/officedd/officedd_photo/images/images_name:/app/images
+      - ./ai-service:/app                 # โค้ด Python ของคุณที่เครื่องจะ mount เข้า /app ใน container
+      - /var/www/html/officedd/officedd_photo/images/images_name:/app/images  # รูปภาพ
+      - /home/modelAi:/root/.insightface/models     # โมเดล insightface จากเครื่อง mount เข้า container
+    working_dir: /app
+    command: python main.py
     depends_on:
       - rabbitmq
-    # ลบ deploy ออก เพราะ docker-compose ธรรมดาไม่รองรับ
-
 networks:
   default:
     driver: bridge

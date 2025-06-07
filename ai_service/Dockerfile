@@ -2,7 +2,6 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# ติดตั้ง dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
@@ -11,15 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# คัดลอก requirements แล้วติดตั้งก่อน (cache stage)
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# คัดลอกโมเดลไปยังตำแหน่ง insightface ใช้งาน
-RUN mkdir -p /root/.insightface/models/buffalo_l
-COPY models/buffalo_l /root/.insightface/models/buffalo_l
-
-# คัดลอก source code
-COPY . .
+# **ไม่ต้อง COPY source code หรือ models** ในนี้ เพราะจะใช้ volume mount แทน
 
 CMD ["python", "main.py"]
